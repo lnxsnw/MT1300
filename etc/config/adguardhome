@@ -1,0 +1,2 @@
+config adguardhome config
+	option enabled 0

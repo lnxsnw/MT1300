@@ -1,0 +1,102 @@
+#!/bin/sh /etc/rc.common
+#
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+#
+
+USE_PROCD=1
+
+START=99
+
+. /lib/functions/gl_util.sh
+model=$(get_model)
+
+start_service() {
+        [ "$(uci -q get adguardhome.config.enabled)" = "1" ] || exit 0
+
+        # Fix: Change only the path that leads to the AGH binary on external device.
+        PARTITION_NAME="PARTITION_NAME"
+        
+        # Fix: Update AGH by just placing the new file on the directory. Name the new file: AdGuardHome.new
+        # TO-DO (hopefully): Use a download link instead to extract the .tar.gz file then use "tar -xvzf" to extract.
+        # Ideally, directly downloading the binary to avoid the extracting work is better tbh.
+        # ALSO: AdGuardHome's native update is disabled (see command below). There must be a reason why? Either way, AGH on MT1300 isn't natively installed.
+
+        OLD_AGH_FILE="/mnt/$PARTITION_NAME/@A1/app/AdGuardHome/AdGuardHome"
+        NEW_AGH_FILE="${OLD_AGH_FILE}.new"
+
+        # Check if the new binary exists
+        if [ -f "$NEW_AGH_FILE" ]; then
+          echo "Found $NEW_AGH_FILE. Updating AdGuardHome binary..."
+
+          # Rename the existing binary to add .old
+          mv "$OLD_AGH_FILE" "${OLD_AGH_FILE}.old"
+          echo "Renamed existing binary to ${OLD_AGH_FILE}.old"
+
+          # Rename the new binary to the main binary
+          mv "$NEW_AGH_FILE" "$OLD_AGH_FILE"
+          echo "Renamed $NEW_AGH_FILE to $OLD_AGH_FILE"
+
+          # Delete the old binary
+          rm -f "${OLD_AGH_FILE}.old"
+          echo "Deleted old binary: ${OLD_AGH_FILE}.old"
+
+          # Add execute permissions
+          chmod +x $OLD_AGH_FILE
+          echo "Update of AGH completed successfully."
+        else
+          echo "No $NEW_AGH_FILE found. No update needed."
+        fi
+
+        # Fix: Use the /tmp directory to store filters and data, this will clear every restart tho!
+        # This is for performance reasons and to not wear out the flash storage.
+        [ "$model" = "mt1300" ] && {
+                rm -rf /mnt/$PARTITION_NAME/@A1/app/AdGuardHome/data 2>/dev/null
+                mkdir -p /tmp/AGH_data
+                ln -s /tmp/AGH_data /mnt/$PARTITION_NAME/@A1/app/AdGuardHome/data
+        }
+
+        [ "$(uci -q get adguardhome.config.dns_enabled)" = "1" ] && {
+                uci set firewall.adguard_home='redirect'
+                uci set firewall.adguard_home.name="Adguard Home"
+                uci set firewall.adguard_home.src='lan'
+                uci set firewall.adguard_home.src_dport='53'
+                uci set firewall.adguard_home.dest='lan'
+                uci set firewall.adguard_home.dest_port='3053'
+                uci set firewall.adguard_home.proto='tcpudp'
+
+                has_radio="$(get_radio)"
+                [ -n "$has_radio" ] && {
+                        uci set firewall.adguard_home_guest='redirect'
+                        uci set firewall.adguard_home_guest.name="Adguard Home guest"
+                        uci set firewall.adguard_home_guest.src='guest'
+                        uci set firewall.adguard_home_guest.src_dport='53'
+                        uci set firewall.adguard_home_guest.dest='guest'
+                        uci set firewall.adguard_home_guest.dest_port='3053'
+                        uci set firewall.adguard_home_guest.proto='tcpudp'
+                }
+        }
+
+        uci commit 'firewall'
+        /etc/init.d/firewall reload
+
+        procd_open_instance
+        procd_set_param respawn
+        procd_set_param stderr 1
+        procd_set_param command /mnt/$PARTITION_NAME/@A1/app/AdGuardHome/AdGuardHome --glinet --no-check-update -c /mnt/$PARTITION_NAME/@A1/app/AdGuardHome/config.yaml -w /mnt/$PARTITION_NAME/@A1/app/AdGuardHome -l syslog
+        procd_close_instance
+        [ -e /etc/edgerouter.fw ] && /etc/edgerouter.fw loaddns
+}
+
+stop_service(){
+        uci delete firewall.adguard_home
+
+        has_radio="$(get_radio)"
+        [ -n "$has_radio" ] && {
+                uci delete firewall.adguard_home_guest
+        }
+
+        uci commit 'firewall'
+        /etc/init.d/firewall reload
+        [ -e /etc/edgerouter.fw ] && /etc/edgerouter.fw loaddns
+}

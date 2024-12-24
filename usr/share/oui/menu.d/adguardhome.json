@@ -1,0 +1,12 @@
+{
+    "index": 80,
+    "view": "adguardhome",
+    "level": 2,
+    "title": "AdGuard Home",
+    "parent": "applications",
+    "parent_icon": "application",
+    "parent_index": 20,
+    "show_mode": [
+        "router"
+    ]
+}
