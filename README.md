@@ -4,8 +4,8 @@ Modifications to the GL-iNET MT1300 Beryl Travel Router.
 Currently, this includes the following modifications:
 - For the admin page: redirect the user to HTTPS if user is not.
 - Added AdGuard Home integrations, extracted from gl-sdk4-ui-adguardhome and gl-sdk4-adguardhome. This has my special modifications though:
-	- The AdGuardHome binary is expected to be at an external storage. This is so that we do not do the [extroot method](https://forum.gl-inet.com/t/does-gl-mt1300-beryl-support-adguard-home-and-gl-product-questions/14360/26).
-	- *The gl-sdk4-ui-adguardhome and gl-sdk4-adguardhome plug-ins/ipks are removed from the GL-iNET repository, unfortunately. However, sourcing from the [gl-inet/glinet](https://github.com/gl-inet/glinet) repository, I was able to get it back (the ipk installation gives an unsupported architecture error, but nothing inside of those were architecture-specific files), I just extracted the files from it.*
+	- The AdGuardHome binary **is expected to be at an external storage**. This is so that we do not do the [extroot method](https://forum.gl-inet.com/t/does-gl-mt1300-beryl-support-adguard-home-and-gl-product-questions/14360/26).
+	- *The gl-sdk4-ui-adguardhome and gl-sdk4-adguardhome plug-ins/ipks were removed from the GL-iNET repository, unfortunately. However, sourcing from the [gl-inet/glinet](https://github.com/gl-inet/glinet) repository, I was able to get it back (the ipk installation gives an unsupported architecture error, but nothing inside of those were architecture-specific files), I just extracted the files from it.*
 	- Update the binary by placing `AdGuardHome.new` to the external storage (more explanation in the `/etc/init.d/adguardhome` file).
 	- **Commands to run (these are the commands that setup.sh runs):**
 		- `mkdir -p /etc/AdGuardHome`
