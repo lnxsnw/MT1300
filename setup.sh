@@ -19,20 +19,18 @@ echo "Copying directories to system..."
 cp -r /tmp/MT1300-main/etc/* /etc/
 cp -r /tmp/MT1300-main/usr/* /usr/
 cp -r /tmp/MT1300-main/www/* /www/ 2>/dev/null || true
+echo "File Transfer Tasks Done, Cooling Down for 3 Seconds..."
+sleep 3
 
 # Create required directories
 echo "Creating required directories..."
 mkdir -p /etc/AdGuardHome
-mkdir -p /usr/bin/AdGuardHome
 
 # Make adguardhome script executable
 chmod +x /etc/init.d/adguardhome
 
 # Enable adguardhome service
 /etc/init.d/adguardhome enable
-
-# Make AdGuardHome binary executable
-chmod +x /usr/bin/AdGuardHome/AdGuardHome
 
 # Ask for AdGuardHome directory
 echo
@@ -43,8 +41,11 @@ read -r AGH_DIR
 AGH_DIR=$(handle_path "$AGH_DIR")
 
 # Create symbolic links
-ln -s "/etc/AdGuardHome" "$AGH_DIR"
-ln -s "/etc/AdGuardHome/AdGuardHome" "/usr/bin/AdGuardHome/AdGuardHome"
+ln -s "$AGH_DIR" "/etc/AdGuardHome"
+ln -s "/etc/AdGuardHome/AdGuardHome" "/usr/bin/AdGuardHome"
+
+# Make AdGuardHome binary executable
+chmod +x /usr/bin/AdGuardHome/AdGuardHome
 
 # Remind user to edit init.d script
 echo
