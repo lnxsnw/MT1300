@@ -12,10 +12,10 @@ Currently, this includes the following modifications:
 		- `mkdir -p /usr/bin/AdGuardHome`
 		- `chmod +x /etc/init.d/adguardhome`
 		- `/etc/init.d/adguardhome enable`
-		- `chmod +x /usr/bin/AdGuardHome/AdGuardHome`
-		- `ln -s /etc/AdGuardHome (EXTERNAL_AGH_DIRECTORY)`
-		- `ln -s /etc/AdGuardHome/AdGuardHome /usr/bin/AdGuardHome/AdGuardHome`
-	- Alternatively, you can just quickly set it up by:
+		- `ln -s (EXTERNAL_AGH_DIRECTORY) /etc/AdGuardHome`
+		- `ln -s /etc/AdGuardHome/AdGuardHome /usr/bin/AdGuardHome`
+		- `chmod +x /usr/bin/AdGuardHome`
+	- Alternatively, you can just quickly set it up by: 
 		- `cd /tmp`
 		- `wget https://github.com/lnxsnw/MT1300/archive/refs/heads/main.zip -O a.zip`
 		- `unzip a.zip`
