@@ -9,7 +9,6 @@ Currently, this includes the following modifications:
 	- Update the binary by placing `AdGuardHome.new` to the external storage (more explanation in the `/etc/init.d/adguardhome` file).
 	- **Commands to run (these are the commands that setup.sh runs):**
 		- `mkdir -p /etc/AdGuardHome`
-		- `mkdir -p /usr/bin/AdGuardHome`
 		- `chmod +x /etc/init.d/adguardhome`
 		- `/etc/init.d/adguardhome enable`
 		- `ln -s (EXTERNAL_AGH_DIRECTORY) /etc/AdGuardHome`
