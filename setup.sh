@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Function to handle paths with spaces
 handle_path() {
