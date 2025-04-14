@@ -2,11 +2,14 @@
     "index": 80,
     "view": "adguardhome",
     "level": 2,
-    "title": "AdGuard Home",
+    "title": "Adguard Home",
     "parent": "applications",
     "parent_icon": "application",
     "parent_index": 20,
     "show_mode": [
         "router"
+    ],
+    "lang_hide": [
+        "zh-cn"
     ]
 }

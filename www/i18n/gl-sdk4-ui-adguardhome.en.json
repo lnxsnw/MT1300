@@ -13,6 +13,8 @@
 "not_disabled_dns_msg": "No other DNS is disabled",
 "domain_th": "Domain",
 "request_th": "Requests Count",
-"no_data": "No Data"
+"no_data": "No Data",
+"process_req_label": "AdGuard Home Handle Client Requests",
+"process_req_tips": "If this option is enabled, DNS queries from client devices will be handled by AdGuard Home directly. AdGuard Home will show DNS query logs by clients. But this will cause VPN policies based on domain not work."
 }
 }
