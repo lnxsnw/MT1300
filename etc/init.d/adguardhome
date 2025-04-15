@@ -7,7 +7,7 @@ START=99
 . /lib/functions/gl_util.sh
 model=$(get_model)
 
-AGH_RAM_DIR="/tmp/AGH_binary"
+AGH_RAM_DIR="/tmp/AGH_data"
 AGH_RAM_BIN="$AGH_RAM_DIR/AdGuardHome"
 AGH_LOCAL_DIR="/mnt/sdcard/AdGuardHome"
 AGH_LOCAL_BIN="$AGH_LOCAL_DIR/AdGuardHome"
@@ -26,8 +26,8 @@ download_and_verify() {
     for i in $(seq 1 10); do
         if ping -c 1 -W 1 9.9.9.9 >/dev/null 2>&1; then
             logger -t AGH-INIT.D "Internet reachable. Downloading files..."
-            wget -q -O "$AGH_TAR" "$AGH_RELEASE_URL" || return 1
-            wget -q -O "$AGH_SUM" "$AGH_CHECKSUM_URL" || return 1
+            wget -O "$AGH_TAR" "$AGH_RELEASE_URL" || return 1
+            wget -O "$AGH_SUM" "$AGH_CHECKSUM_URL" || return 1
 
             EXPECTED_HASH=$(grep "AdGuardHome_linux_mipsle_softfloat.tar.gz" "$AGH_SUM" | awk '{print $1}')
             [ -z "$EXPECTED_HASH" ] && return 1
@@ -89,7 +89,7 @@ start_service() {
     	# If download_and_verify is successful, copy the local config to the extracted directory in RAM
     	[ -f "$AGH_LOCAL_DIR/config.yaml" ] && cp "$AGH_LOCAL_DIR/config.yaml" "$AGH_RAM_DIR/"
 		logger -t AGH-INIT.D "Launching Fresh AGH."
-    	# Then proceed with running the downloaded binary from /tmp/AGH_binary
+    	# Then proceed with running the downloaded binary from /tmp/AGH_data
 	fi
 
 	#b1300 dose not support mmap,need link the data to tmp fs
