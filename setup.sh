@@ -16,9 +16,9 @@ fi
 
 # Copy directories
 echo "Copying directories to system..."
-cp -r /tmp/MT1300-main/etc/* /etc/
-cp -r /tmp/MT1300-main/usr/* /usr/
-cp -r /tmp/MT1300-main/www/* /www/ 2>/dev/null || true
+cp -r /tmp/MT1300-2/etc/* /etc/
+cp -r /tmp/MT1300-2/usr/* /usr/
+cp -r /tmp/MT1300-2/www/* /www/ 2>/dev/null || true
 echo "File Transfer Tasks Done, Cooling Down for 3 Seconds..."
 sleep 3
 
