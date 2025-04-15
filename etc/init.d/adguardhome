@@ -24,8 +24,9 @@ cleanup_temp_files() {
 download_and_verify() {
     logger -t AGH-INIT.D "Checking internet connectivity..."
     for i in $(seq 1 10); do
-        if ping -c 1 -W 1 9.9.9.9 >/dev/null 2>&1; then
+        if ping -c 1 -W 1 github.com >/dev/null 2>&1; then
             logger -t AGH-INIT.D "Internet reachable. Downloading files..."
+            sleep 5
             curl -L -o "$AGH_TAR" "$AGH_RELEASE_URL" || return 1
             curl -L -o "$AGH_SUM" "$AGH_CHECKSUM_URL" || return 1
 
@@ -42,7 +43,7 @@ download_and_verify() {
 
             logger -t AGH-INIT.D "Checksum verified. Extracting..."
             mkdir -p "$AGH_RAM_DIR"
-            tar -xzf "$AGH_TAR" -C "$AGH_RAM_DIR" --strip-components=1
+            tar -xzf "$AGH_TAR" -C "$AGH_RAM_DIR"
             chmod +x "$AGH_RAM_BIN"
 
             # Compare extracted binary hash with local
