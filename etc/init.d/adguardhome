@@ -88,16 +88,21 @@ start_service() {
 
 	logger -t AGH-INIT.D "Hello World! AGH is enabled."
 
-	if ! download_and_verify; then
-    	# If download_and_verify fails (no internet, checksum mismatch, etc.), fall back to local version
-    	prepare_agh_from_local
-		logger -t AGH-INIT.D "Launching Stale AGH."
-	else
-    	# If download_and_verify is successful, copy the local config to the extracted directory in RAM
-    	[ -f "$AGH_LOCAL_DIR/config.yaml" ] && cp "$AGH_LOCAL_DIR/config.yaml" "$AGH_RAM_DIR/"
-		logger -t AGH-INIT.D "Launching Fresh AGH."
-    	# Then proceed with running the downloaded binary from /tmp/AGH_data
-	fi
+	# Check if the app is already present
+    if [ -x "$AGH_RAM_BIN" ]; then
+        logger -t AGH-INIT.D "Launching Cached AGH."
+    else
+        if ! download_and_verify; then
+            # If download_and_verify fails (no internet, checksum mismatch, etc.), fall back to local version
+            prepare_agh_from_local
+            logger -t AGH-INIT.D "Launching Stale AGH."
+        else
+            # If download_and_verify is successful, copy the local config to the extracted directory in RAM
+            [ -f "$AGH_LOCAL_DIR/config.yaml" ] && cp "$AGH_LOCAL_DIR/config.yaml" "$AGH_RAM_DIR/"
+            logger -t AGH-INIT.D "Launching Fresh AGH."
+            # Then proceed with running the downloaded binary from /tmp/AGH_data
+        fi
+    fi
 
 	#b1300 dose not support mmap,need link the data to tmp fs
 	[ "$model" = "b1300" ] && {
