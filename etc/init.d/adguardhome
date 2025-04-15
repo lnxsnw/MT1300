@@ -43,6 +43,7 @@ download_and_verify() {
 
             logger -t AGH-INIT.D "Checksum verified. Extracting..."
             mkdir -p "$AGH_RAM_DIR"
+            mkdir -p "$AGH_RAM_DIR/fresh"
             tar -xzf "$AGH_TAR" -C "$AGH_RAM_DIR/fresh"
             cp "$AGH_RAM_DIR/fresh/AdGuardHome/AdGuardHome" "$TMP_AGH_DATA/"
             rm -rf $AGH_RAM_DIR/fresh
