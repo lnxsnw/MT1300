@@ -26,9 +26,10 @@ download_and_verify() {
     for i in $(seq 1 10); do
         if ping -c 1 -W 1 9.9.9.9 >/dev/null 2>&1; then
             logger -t AGH-INIT.D "Internet reachable. Downloading files..."
-            wget -O "$AGH_TAR" "$AGH_RELEASE_URL" || return 1
-            wget -O "$AGH_SUM" "$AGH_CHECKSUM_URL" || return 1
+            curl -L -o "$AGH_TAR" "$AGH_RELEASE_URL" || return 1
+            curl -L -o "$AGH_SUM" "$AGH_CHECKSUM_URL" || return 1
 
+            logger -t AGH-INIT.D "Hashing Files..."
             EXPECTED_HASH=$(grep "AdGuardHome_linux_mipsle_softfloat.tar.gz" "$AGH_SUM" | awk '{print $1}')
             [ -z "$EXPECTED_HASH" ] && return 1
 
