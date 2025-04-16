@@ -23,7 +23,7 @@ cleanup_temp_files() {
 
 download_and_verify() {
     logger -t AGH-INIT.D "Checking internet connectivity..."
-    for i in $(seq 1 10); do
+    for i in $(seq 1 5); do
         if ping -c 1 -W 1 github.com >/dev/null 2>&1; then
             logger -t AGH-INIT.D "Internet reachable. Preparing to download..."
             sleep 15
@@ -69,7 +69,7 @@ download_and_verify() {
         sleep 1
     done
 
-    logger -t AGH-INIT.D "No internet after 10s. Skipping download."
+    logger -t AGH-INIT.D "No internet after 5s. Skipping download."
     return 1
 }
 
