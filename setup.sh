@@ -15,18 +15,15 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Copy directories
-echo "Copying directories to system..."
+echo
+echo
+echo
+sleep 5
 cp -r /tmp/MT1300-2/etc/* /etc/
 cp -r /tmp/MT1300-2/usr/* /usr/
 cp -r /tmp/MT1300-2/www/* /www/ 2>/dev/null || true
-echo "File Transfer Tasks Done, Cooling Down for 3 Seconds..."
-sleep 3
-
-# Make adguardhome script executable
 chmod +x /etc/init.d/adguardhome
-# Enable adguardhome service (not start, yet.)
 /etc/init.d/adguardhome enable
-echo
 # Prompt the user for the desired directory
 echo "Enter the directory path for your locally stored AdGuardHome (default: /mnt/sdcard/AdGuardHome): "
 read user_input
@@ -44,8 +41,6 @@ fi
 # Now, update the /etc/init.d/adguardhome file
 sed -i "s|AGH_LOCAL_DIR=.*|AGH_LOCAL_DIR=\"$AGH_LOCAL_DIR\"|" /etc/init.d/adguardhome
 echo "AGH_LOCAL_DIR has been set to: $AGH_LOCAL_DIR"
-echo
-sleep 3
 
 echo
 echo "Setup completed!"
