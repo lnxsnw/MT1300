@@ -18,94 +18,172 @@ AGH_SUM="/tmp/checksums.txt"
 
 cleanup_temp_files() {
     rm -f "$AGH_TAR" "$AGH_SUM"
-    logger -t AGH-INIT.D "Temporary files cleaned up"
+    logger -t AGH-INIT.D "Temporary files cleaned up: $AGH_TAR, $AGH_SUM"
 }
 
 download_and_verify() {
-    logger -t AGH-INIT.D "Checking internet connectivity..."
+    logger -t AGH-INIT.D "Checking internet connectivity to github.com..."
     for i in $(seq 1 5); do
         if ping -c 1 -W 1 github.com >/dev/null 2>&1; then
-            logger -t AGH-INIT.D "Internet reachable. Preparing to download..."
-            sleep 15
-            logger -t AGH-INIT.D "Downloading files..."
-            wget -q -O "$AGH_TAR" "$AGH_RELEASE_URL" || return 1
-            wget -q -O "$AGH_SUM" "$AGH_CHECKSUM_URL" || return 1
+            logger -t AGH-INIT.D "Internet connectivity established (attempt $i/5)"
+            sleep 10
+            logger -t AGH-INIT.D "Downloading AdGuardHome from GitHub Releases..."
+            wget -q -O "$AGH_TAR" "$AGH_RELEASE_URL"
+            if [ $? -ne 0 ]; then
+                logger -t AGH-INIT.D "ERROR: Failed to download AdGuardHome package, falling back to local copy."
+                return 1
+            fi
+            
+            logger -t AGH-INIT.D "Downloading checksums from GitHub Releases..."
+            wget -q -O "$AGH_SUM" "$AGH_CHECKSUM_URL"
+            if [ $? -ne 0 ]; then
+                logger -t AGH-INIT.D "ERROR: Failed to download checksums file, falling back to local copy."
+                return 1
+            fi
 
-            logger -t AGH-INIT.D "Hashing Files..."
+            logger -t AGH-INIT.D "Verifying package integrity with SHA256 checksum..."
             EXPECTED_HASH=$(grep "AdGuardHome_linux_mipsle_softfloat.tar.gz" "$AGH_SUM" | awk '{print $1}')
-            [ -z "$EXPECTED_HASH" ] && return 1
+            if [ -z "$EXPECTED_HASH" ]; then
+                logger -t AGH-INIT.D "ERROR: Could not find expected hash in checksums file, falling back to local copy."
+                return 1
+            fi
 
             ACTUAL_HASH=$(sha256sum "$AGH_TAR" | awk '{print $1}')
-            [ "$EXPECTED_HASH" != "$ACTUAL_HASH" ] && {
-                logger -t AGH-INIT.D "ERROR: Checksum mismatch! Expected: $EXPECTED_HASH, Got: $ACTUAL_HASH"
-                cleanup_temp_files
+            if [ "$EXPECTED_HASH" != "$ACTUAL_HASH" ]; then
+                logger -t AGH-INIT.D "ERROR: Checksum verification failed"
+                logger -t AGH-INIT.D "Expected: $EXPECTED_HASH"
+                logger -t AGH-INIT.D "Actual: $ACTUAL_HASH"
+                logger -t AGH-INIT.D "Falling back to local copy."
                 return 1
-            }
+            fi
 
-            logger -t AGH-INIT.D "Checksum verified."
+            logger -t AGH-INIT.D "Checksum verification successful"
+            logger -t AGH-INIT.D "Creating directory structure at $AGH_RAM_DIR"
             mkdir -p "$AGH_RAM_DIR"
             mkdir -p "$AGH_RAM_DIR/fresh"
-            logger -t AGH-INIT.D "Extracting..."
+            
+            logger -t AGH-INIT.D "Extracting AdGuardHome package to $AGH_RAM_DIR/fresh"
             tar -xzf "$AGH_TAR" -C "$AGH_RAM_DIR/fresh"
-            logger -t AGH-INIT.D "Copying..."
+            if [ $? -ne 0 ]; then
+                logger -t AGH-INIT.D "ERROR: Failed to extract AdGuardHome package, falling back to local copy."
+                return 1
+            fi
+            
+            logger -t AGH-INIT.D "Copying AdGuardHome binary to $AGH_RAM_DIR"
             cp "$AGH_RAM_DIR/fresh/AdGuardHome/AdGuardHome" "$AGH_RAM_DIR/"
+            if [ $? -ne 0 ]; then
+                logger -t AGH-INIT.D "ERROR: Failed to copy AdGuardHome binary, falling back to local copy."
+                return 1
+            fi
+            
+            logger -t AGH-INIT.D "Cleaning up temporary files..."
             rm -rf $AGH_RAM_DIR/fresh
+            rm -f "$AGH_TAR" "$AGH_SUM"
+            
+            logger -t AGH-INIT.D "Setting executable permissions on $AGH_RAM_BIN"
             chmod +x "$AGH_RAM_BIN"
 
             # Compare extracted binary hash with local
+            logger -t AGH-INIT.D "Comparing downloaded binary to local binary..."
             NEW_BIN_HASH=$(sha256sum "$AGH_RAM_BIN" | awk '{print $1}')
-            [ -f "$AGH_LOCAL_BIN" ] && OLD_BIN_HASH=$(sha256sum "$AGH_LOCAL_BIN" | awk '{print $1}') || OLD_BIN_HASH=""
+            
+            if [ -f "$AGH_LOCAL_BIN" ]; then
+                OLD_BIN_HASH=$(sha256sum "$AGH_LOCAL_BIN" | awk '{print $1}')
+                logger -t AGH-INIT.D "Existing binary hash: $OLD_BIN_HASH"
+            else
+                OLD_BIN_HASH=""
+                logger -t AGH-INIT.D "No existing binary found at $AGH_LOCAL_BIN"
+            fi
+            
+            logger -t AGH-INIT.D "New binary hash: $NEW_BIN_HASH"
 
             if [ "$NEW_BIN_HASH" != "$OLD_BIN_HASH" ]; then
-                logger -t AGH-INIT.D "Binary hash differs. Updating local copy..."
+                logger -t AGH-INIT.D "Binary hash differs - updating local copy at $AGH_LOCAL_DIR"
                 mkdir -p "$AGH_LOCAL_DIR"
                 cp "$AGH_RAM_BIN" "$AGH_LOCAL_BIN"
+                if [ $? -eq 0 ]; then
+                    logger -t AGH-INIT.D "Local binary updated successfully"
+                else
+                    logger -t AGH-INIT.D "WARNING: Failed to update local binary"
+                fi
             else
-                logger -t AGH-INIT.D "Binary matches existing local copy. No update needed."
+                logger -t AGH-INIT.D "Binary matches existing local copy - no update needed."
             fi
-            cleanup_temp_files
+            logger -t AGH-INIT.D "Download stage complete."
             return 0
         fi
+        logger -t AGH-INIT.D "Internet connectivity check failed (attempt $i/5)"
         sleep 1
     done
 
-    logger -t AGH-INIT.D "No internet after 5s. Skipping download."
+    logger -t AGH-INIT.D "WARNING: No internet connectivity after 5 attempts - skipping download"
     return 1
 }
 
 prepare_agh_from_local() {
-    logger -t AGH-INIT.D "WARNING: Falling back to local copy."
+    logger -t AGH-INIT.D "WARNING: An error has occured or device is offline, falling back to local copy at $AGH_LOCAL_DIR"
     if [ -x "$AGH_LOCAL_BIN" ]; then
+        logger -t AGH-INIT.D "Creating RAM directory at $AGH_RAM_DIR"
         mkdir -p "$AGH_RAM_DIR"
+        logger -t AGH-INIT.D "Copying files from $AGH_LOCAL_DIR to $AGH_RAM_DIR"
         cp -r "$AGH_LOCAL_DIR"/* "$AGH_RAM_DIR"/
+        if [ $? -eq 0 ]; then
+            logger -t AGH-INIT.D "Local files copied successfully"
+        else
+            logger -t AGH-INIT.D "ERROR: Failed to copy local files"
+            exit 1
+        fi
+        logger -t AGH-INIT.D "Setting executable permissions on $AGH_RAM_BIN"
         chmod +x "$AGH_RAM_BIN"
+        if [ -f "$AGH_LOCAL_DIR/config.yaml" ]; then
+            logger -t AGH-INIT.D "Copying configuration from $AGH_LOCAL_DIR/config.yaml to $AGH_RAM_DIR/"
+            cp "$AGH_LOCAL_DIR/config.yaml" "$AGH_RAM_DIR/"
+            if [ $? -eq 0 ]; then
+                logger -t AGH-INIT.D "Configuration copied successfully"
+            else
+                logger -t AGH-INIT.D "WARNING: Failed to copy configuration file"
+            fi
+        else
+            logger -t AGH-INIT.D "WARNING: No configuration file found at $AGH_LOCAL_DIR/config.yaml"
+        fi
     else
-        logger -t AGH-INIT.D "Local AdGuardHome binary not found or not executable!"
+        logger -t AGH-INIT.D "FATAL: Local AdGuardHome binary not found or not executable at $AGH_LOCAL_BIN"
         exit 1
     fi
 }
+
 start_service() {
-	[ "$(uci -q get adguardhome.config.enabled)" = "1" ] || exit 0
+    # Check if service is enabled
+    [ "$(uci -q get adguardhome.config.enabled)" = "1" ] || exit 0
+    logger -t AGH-INIT.D "AdGuardHome is enabled, initializing..."
 
-	logger -t AGH-INIT.D "Hello World! AGH is enabled."
-
-	# Check if the app is already present
+    # Check if the app is already present
     if [ -x "$AGH_RAM_BIN" ]; then
-        logger -t AGH-INIT.D "Launching Cached AGH."
+        logger -t AGH-INIT.D "Launching cached AdGuardHome instance..."
     else
+        logger -t AGH-INIT.D "AdGuardHome binary not found in RAM - attempting download"
         if ! download_and_verify; then
             # If download_and_verify fails (no internet, checksum mismatch, etc.), fall back to local version
             prepare_agh_from_local
-            logger -t AGH-INIT.D "Launching Stale AGH."
+            logger -t AGH-INIT.D "Launching local AdGuardHome instance..."
         else
             # If download_and_verify is successful, copy the local config to the extracted directory in RAM
-            [ -f "$AGH_LOCAL_DIR/config.yaml" ] && cp "$AGH_LOCAL_DIR/config.yaml" "$AGH_RAM_DIR/"
-            logger -t AGH-INIT.D "Launching Fresh AGH."
-            # Then proceed with running the downloaded binary from /tmp/AGH_data
+            if [ -f "$AGH_LOCAL_DIR/config.yaml" ]; then
+                logger -t AGH-INIT.D "Copying configuration from $AGH_LOCAL_DIR/config.yaml to $AGH_RAM_DIR/"
+                cp "$AGH_LOCAL_DIR/config.yaml" "$AGH_RAM_DIR/"
+                if [ $? -eq 0 ]; then
+                    logger -t AGH-INIT.D "Configuration copied successfully"
+                else
+                    logger -t AGH-INIT.D "WARNING: Failed to copy configuration file"
+                fi
+            else
+                logger -t AGH-INIT.D "WARNING: No configuration file found at $AGH_LOCAL_DIR/config.yaml"
+            fi
+            logger -t AGH-INIT.D "Launching fresh AdGuardHome instance..."
         fi
     fi
 
-	#b1300 dose not support mmap,need link the data to tmp fs
+    #b1300 dose not support mmap,need link the data to tmp fs
 	[ "$model" = "b1300" ] && {
 		rm -rf /etc/AdGuardHome/data 2>/dev/null
 		mkdir -p /tmp/AGH_data
