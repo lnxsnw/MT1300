@@ -6,10 +6,10 @@ Currently, this includes the following modifications:
 - Added AdGuard Home integrations, extracted from gl-sdk4-ui-adguardhome and gl-sdk4-adguardhome. The ipk for these files are long gone in the app repository but [saved in the ipk folder here](https://github.com/lnxsnw/MT1300/tree/e53994b74ae782a681b4c36cd7ad1d1ac4d0161e)[^1], thanks GL-iNET Support for still having them!
 - You can just quickly set it up by copypasting: 
 	- `cd /tmp`
-	- `wget https://github.com/lnxsnw/MT1300/archive/refs/heads/v2.zip -O a.zip`
+	- `wget https://github.com/lnxsnw/MT1300/archive/refs/heads/v3.zip -O a.zip`
 	- `unzip a.zip`
-	- `chmod +x /tmp/MT1300-2/setup.sh`
-	- `/tmp/MT1300-2/setup.sh`
+	- `chmod +x /tmp/MT1300-3/setup.sh`
+	- `/tmp/MT1300-3/setup.sh`
 
 Yes, this work used ai but with assurance by extensive testing lol.
 The ipk folder will not be copied to the filesystem, it's there for archive purposes.
