@@ -20,7 +20,6 @@ However, stats will not persist.
 
 This method uses the internet to download the latest AGH then runs it in ram.
 If it fails or is offline, it uses a local copy as backup, should you have one.
-Be sure to set where that directory is in the setup or in the `/etc/init.d/adguardhome` file.
 
 I originally used both these setups (was my starting point):
 - https://forum.gl-inet.com/t/does-gl-mt1300-beryl-support-adguard-home-and-gl-product-questions/14360
