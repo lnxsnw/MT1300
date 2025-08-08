@@ -20,7 +20,7 @@ AGH_RAM_BIN="$AGH_RAM_DIR/AdGuardHome"
 start_service() {
 	[ "$(uci -q get adguardhome.config.enabled)" = "1" ] || exit 0
 
-    logger -t AGH-INIT.D "Checking internet connectivity..."
+    logger -t AGH-INIT.D "Hello, World! Checking internet connectivity..."
     if ping -c1 github.com >/dev/null 2>&1; then
         logger -t AGH-INIT.D "Internet is available. Proceeding with online update."
 
@@ -58,24 +58,30 @@ start_service() {
         if [ $MATCH -eq 0 ]; then
             logger -t AGH-INIT.D "Persistent version matches checksum. Extracting to RAM."
             mkdir -p "$AGH_RAM_DIR"
-            tar -xzf "$AGH_RELEASE_TAR" -C "$AGH_RAM_DIR" --strip-components=1
+            tar -xzf "$AGH_RELEASE_TAR" -C "$AGH_RAM_DIR"
         else
             logger -t AGH-INIT.D "Persistent version is outdated or missing. Updating..."
             rm -f "$AGH_PERSIST_DIR/$AGH_RELEASE_TAR"
             cp "$AGH_RELEASE_TAR" "$AGH_PERSIST_DIR/"
             mkdir -p "$AGH_RAM_DIR"
-            tar -xzf "$AGH_RELEASE_TAR" -C "$AGH_RAM_DIR" --strip-components=1
+            tar -xzf "$AGH_RELEASE_TAR" -C "$AGH_RAM_DIR"
         fi
 
         logger -t AGH-INIT.D "Cleaning up temp directory..."
         rm -rf "$AGH_INIT_DIR"
-
+        cp /tmp/AGH_data/AdGuardHome/AdGuardHome /tmp/AGH_data/AGH
+        rm -rf /tmp/AGH_data/AdGuardHome
+        mv /tmp/AGH_data/AGH /tmp/AGH_data/AdGuardHome
+        chmod +x "$AGH_RAM_BIN"
         logger -t AGH-INIT.D "Starting AdGuardHome with updated binary..."
     else
         logger -t AGH-INIT.D "No internet. Using persistent release..."
         mkdir -p "$AGH_RAM_DIR"
-        tar -xzf "$AGH_PERSIST_DIR/$AGH_RELEASE_TAR" -C "$AGH_RAM_DIR" --strip-components=1
-
+        tar -xzf "$AGH_PERSIST_DIR/$AGH_RELEASE_TAR" -C "$AGH_RAM_DIR"
+        cp /tmp/AGH_data/AdGuardHome/AdGuardHome /tmp/AGH_data/AGH
+        rm -rf /tmp/AGH_data/AdGuardHome
+        mv /tmp/AGH_data/AGH /tmp/AGH_data/AdGuardHome
+        chmod +x "$AGH_RAM_BIN"
         logger -t AGH-INIT.D "Starting AdGuardHome from persistent copy..."
     fi
 

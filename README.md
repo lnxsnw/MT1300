@@ -2,7 +2,7 @@
 Modifications to the GL-iNET MT1300 Beryl Travel Router.
 
 Currently, this includes the following modifications:
-- For the admin page: redirect the user to HTTPS if user is not with tweaks for AGH.
+- For the admin page: redirect the user to HTTPS if user is not, and with tweaks for AGH.
 - Added AdGuard Home integrations, extracted from gl-sdk4-ui-adguardhome and gl-sdk4-adguardhome. The ipk for these files are long gone in the app repository but [saved in the ipk folder here](https://github.com/lnxsnw/MT1300/tree/e53994b74ae782a681b4c36cd7ad1d1ac4d0161e)[^1], thanks GL-iNET Support for still having them!
 - You can just quickly set it up by copypasting: 
 	- `cd /tmp`
