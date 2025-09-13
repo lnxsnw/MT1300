@@ -25,6 +25,20 @@ cp -r /tmp/MT1300-3/www/* /www/ 2>/dev/null || true
 chmod +x /etc/init.d/adguardhome
 /etc/init.d/adguardhome enable
 echo
+#!/bin/sh
+
+# https://forum.gl-inet.com/t/flint-cron-err-crond-3775-messages-repeatedly-in-log-file/34344
+echo "Delete modem_status_monitor that is spamming the logs? (y/n)"
+read answer
+
+if [ "$answer" = "y" ]; then
+    rm -f /tmp/gl_crontabs/crontabs.d/modem_status_monitor
+    rm -f /etc/gl_crontabs/crontabs.d/modem_status_monitor
+    echo "modem_status_monitor Removed"
+else
+    echo "modem_status_monitor removal skipped"
+fi
+
 echo "Setup completed!"
 echo "Rebooting in 10 Seconds..."
 echo "CTRL+C to cancel."
